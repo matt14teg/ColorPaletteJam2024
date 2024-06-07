@@ -3,4 +3,4 @@ Repo for our color palette jam!
 
 hello world
 
-asdasdasdas
+Alpha
