@@ -16,7 +16,7 @@ character controllers are more powerful than CharacterBody2D,
 but can be more difficult to handle, as they require
 manual modification of the RigidBody3D velocity."
 config/tags=PackedStringArray("2d", "demo", "official", "physics", "tilemap")
-run/main_scene="res://stage.tscn"
+run/main_scene="res://scenes/test_scene.tscn"
 config/features=PackedStringArray("4.2")
 config/icon="res://icon.webp"
 
