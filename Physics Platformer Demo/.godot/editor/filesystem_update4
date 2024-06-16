@@ -1,6 +1,6 @@
-res://test_player.tscn
+res://stage.tscn
 res://tileset.tres
 res://TestTile.tres
-res://stage.tscn
 res://scenes/test_scene.tscn
+res://test_player.tscn
 res://test_player.gd

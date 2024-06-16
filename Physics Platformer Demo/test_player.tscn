@@ -21,4 +21,34 @@ mesh = SubResource("CapsuleMesh_qthqe")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.23472, 9.65786)
 
-[node name="RayCast3D" type="RayCast3D" parent="."]
+[node name="Grapplehook" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 1, 0.25, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast2" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(0.173648, 0.984808, 0, -0.984808, 0.173648, 0, 0, 0, 1, 1, 0.5, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast3" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(-0.173648, 0.984808, 0, -0.984808, -0.173648, 0, 0, 0, 1, 1, 0, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast4" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(-0.34202, 0.939692, 0, -0.939692, -0.34202, 0, 0, 0, 1, 1, -0.25, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast5" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(0.34202, 0.939693, 0, -0.939693, 0.34202, 0, 0, 0, 1, 1, 0.75, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast6" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(0.5, 0.866025, 0, -0.866025, 0.5, 0, 0, 0, 1, 1, 1, 0)
+target_position = Vector3(0, 5, 0)
+
+[node name="GrappleRaycast7" type="RayCast3D" parent="Grapplehook"]
+transform = Transform3D(-0.5, 0.866025, 0, -0.866025, -0.5, 0, 0, 0, 1, 1, -0.5, 0)
+target_position = Vector3(0, 5, 0)
