@@ -1,14 +1,11 @@
 extends RigidBody3D
 
-var path = []
-var hit = false
+var speed = 10.0
 
-func _process(delta):
-	# Update projectile path
-	path.append(global_position)
-	
-	# Check for collisions
-	if not hit and get_colliding_bodies().size() > 0:
-		hit = true
-		# Perform collision handling, e.g., apply force, destroy projectile, etc.
+signal collided(collision)
+
+func _physics_process(delta):
+	var collision = move_and_collide(linear_velocity.normalized() * speed * delta)
+	if collision:
+		emit_signal("collided", collision)
 		queue_free()

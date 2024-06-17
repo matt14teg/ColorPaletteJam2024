@@ -29,6 +29,18 @@ var swing_angle = 0.0
 var line_mesh: ImmediateMesh
 var line_material: StandardMaterial3D
 
+var projectile_speed = 20.0
+var latch_point = null
+var rope_length = 10.0
+var swing_force = 10.0
+var gravity_force = 9.8
+var projectile = null
+
+var projectile_path = []
+var projectile_hit = false
+
+@onready var grapple_hook = $GrappleHook
+
 func _ready():
 	# Create the line mesh and material
 	line_mesh = ImmediateMesh.new()
@@ -68,10 +80,24 @@ func _process(delta):
 	else:
 		# Clear the line mesh when not hooked
 		line_mesh.clear_surfaces()
+	
+	# Draw projectile path
+	if projectile_path.size() > 1:
+		line_mesh.clear_surfaces()
+		line_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		for i in range(projectile_path.size() - 1):
+			line_mesh.surface_add_vertex(projectile_path[i])
+			line_mesh.surface_add_vertex(projectile_path[i + 1])
+			line_mesh.surface_set_color(Color.RED)
+			line_mesh.surface_set_color(Color.RED)
+		line_mesh.surface_end()
 
 func _physics_process(delta):
 	gravity()
-	hook()
+	
+	if is_inside_tree():
+		hook()
+		update_grapple_hook_position()
 	
 	if hooked:
 		grapple(delta)
@@ -103,6 +129,7 @@ func _physics_process(delta):
 				dash_timer = 0
 		
 		custom_velocity.y = y_velo
+		custom_velocity.z = 0  # Restrict Z-axis movement
 	
 	velocity = custom_velocity
 	move_and_slide()
@@ -112,56 +139,132 @@ func dash():
 	custom_velocity = dash_direction * DASH_FORCE
 
 func hook():
-	if Input.is_action_pressed("grapple"):
-		var grapplehook = get_node("Grapplehook")
-		var camera = get_viewport().get_camera_3d()
-		var mouse_position = get_viewport().get_mouse_position()
-		
-		var closest_raycast = null
-		var closest_distance = INF
-		
-		for raycast in grapplehook.get_children():
-			if raycast is RayCast3D:
-				var screen_pos = camera.unproject_position(raycast.global_transform.origin)
-				var distance = screen_pos.distance_to(mouse_position)
+	if Input.is_action_just_pressed("grapple"):
+		if projectile == null:
+			var character_middle_point = global_position
+			
+			var closest_raycast = find_closest_raycast(character_middle_point)
+			
+			if closest_raycast:
+				var target_position = closest_raycast.get_collision_point()
 				
-				# Check if the raycast is on the allowed side based on the mouse position
-				var is_allowed_side = false
-				if facing_right and raycast.name in ["GrappleRaycast", "GrappleRaycast2", "GrappleRaycast5", "GrappleRaycast6"]:
-					is_allowed_side = true
-				elif not facing_right and raycast.name in ["GrappleRaycast3", "GrappleRaycast4", "GrappleRaycast7", "GrappleRaycast8"]:
-					is_allowed_side = true
+				projectile = preload("res://projectile.tscn").instantiate()
 				
-				if is_allowed_side and distance < closest_distance and raycast.is_colliding():
+				# Spawn the projectile at the character's middle point
+				projectile.global_position = character_middle_point
+				projectile.global_position.z = global_position.z
+				
+				get_parent().add_child(projectile)
+				
+				var direction = (target_position - projectile.global_position).normalized()
+				direction.z = 0  # Restrict Z-axis direction
+				projectile.linear_velocity = direction * projectile_speed
+				latch_point = target_position
+				
+				# Update the character's facing direction based on the grapple direction
+				facing_right = direction.x > 0
+				
+				projectile_path = []
+				projectile_hit = false
+				
+				print("Using raycast: ", closest_raycast.name)
+	else:
+		hooked = false
+		latch_point = null
+		if projectile:
+			projectile.queue_free()
+			projectile = null
+
+func find_closest_raycast(character_middle_point):
+	var closest_raycast = null
+	var closest_distance = INF
+	
+	for raycast in grapple_hook.get_children():
+		if raycast is RayCast3D:
+			raycast.global_position = character_middle_point
+			raycast.force_raycast_update()
+			
+			if raycast.is_colliding():
+				var distance = character_middle_point.distance_to(raycast.get_collision_point())
+				if distance < closest_distance:
 					closest_raycast = raycast
 					closest_distance = distance
-		
-		if closest_raycast:
-			hook_pos = closest_raycast.get_collision_point()
-			grapple_direction = (hook_pos - global_position).normalized()
-			grapple_timer = 0
-			hooked = true
-			swing_angle = 0.0
-	else:
-		hooked = false
+	
+	return closest_raycast
+
+func update_grapple_hook_position():
+	grapple_hook.global_position = global_position
+
+func _on_projectile_body_entered(body):
+	if body != self and not hooked:
+		hooked = true
+		latch_point = projectile.global_position
+		grapple(get_physics_process_delta_time())
+		projectile.queue_free()
+		projectile = null
 
 func grapple(delta):
-	grapple_timer += delta
+	if latch_point:
+		var rope_vector = latch_point - global_position
+		rope_vector.z = 0  # Restrict Z-axis movement
+		var rope_direction = rope_vector.normalized()
+		var rope_distance = rope_vector.length()
+		
+		if rope_distance > rope_length:
+			var excess_distance = rope_distance - rope_length
+			global_position += rope_direction * excess_distance
+		
+		var swing_direction = -rope_direction
+		swing_direction.y = 0
+		custom_velocity += swing_direction * swing_force
+		
+		custom_velocity.y -= gravity_force * delta
+		custom_velocity.z = 0  # Restrict Z-axis movement
+		
+		var space_state = get_world_3d().direct_space_state
+		var ray_params = PhysicsRayQueryParameters3D.new()
+		ray_params.from = latch_point
+		ray_params.to = global_position
+		ray_params.collide_with_areas = true
+		ray_params.collide_with_bodies = true
+		
+		var obstacle_collision = space_state.intersect_ray(ray_params)
+		if obstacle_collision:
+			var obstacle_position = obstacle_collision.position
+			obstacle_position.z = global_position.z  # Set the Z-axis of the obstacle position to match the player's Z position
+			var corner_positions = find_closest_corners(obstacle_position)
+			var closest_corner = find_closest_point(corner_positions, global_position)
+			latch_point = closest_corner
+
+func find_closest_corners(obstacle_position):
+	var corner_positions = []
+	var unit_distance = 1.0
 	
-	if grapple_timer < grapple_duration:
-		# Calculate the swing motion
-		swing_angle += SWING_SPEED * delta
+	for i in range(4):
+		var corner_offset = Vector3.ZERO
+		match i:
+			0: # Top-left corner
+				corner_offset = Vector3(-unit_distance, unit_distance, 0)
+			1: # Top-right corner
+				corner_offset = Vector3(unit_distance, unit_distance, 0)
+			2: # Bottom-left corner
+				corner_offset = Vector3(-unit_distance, -unit_distance, 0)
+			3: # Bottom-right corner
+				corner_offset = Vector3(unit_distance, -unit_distance, 0)
 		
-		var swing_offset = Vector3(
-			sin(swing_angle) * SWING_RADIUS,
-			-cos(swing_angle) * SWING_RADIUS,
-			0
-		)
-		
-		var start_pos = hook_pos
-		var end_pos = hook_pos + swing_offset
-		
-		custom_velocity = (end_pos - global_position) * GRAPPLE_SPEED
-	else:
-		custom_velocity = grapple_direction * GRAPPLE_SPEED
-		hooked = false
+		var corner_position = obstacle_position + corner_offset
+		corner_positions.append(corner_position)
+	
+	return corner_positions
+
+func find_closest_point(points, target):
+	var closest_point = null
+	var closest_distance = INF
+	
+	for point in points:
+		var distance = point.distance_to(target)
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_point = point
+	
+	return closest_point
