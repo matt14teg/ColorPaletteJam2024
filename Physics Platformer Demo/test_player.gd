@@ -9,6 +9,8 @@ const MAX_FALL_SPEED = 30
 const DASH_FORCE = 20
 const DASH_DURATION = 0.2
 const GRAPPLE_SPEED = 20
+const SWING_RADIUS = 5.0
+const SWING_SPEED = 2.0
 
 var y_velo = 0
 var facing_right = true
@@ -22,6 +24,7 @@ var hooked = false
 var grapple_direction = Vector3()
 var grapple_timer = 0
 var grapple_duration = 1.0
+var swing_angle = 0.0
 
 var line_mesh: ImmediateMesh
 var line_material: StandardMaterial3D
@@ -78,6 +81,7 @@ func _physics_process(delta):
 			custom_velocity.x = move_dir * MOVE_SPEED
 			if move_dir != 0:
 				dash_direction = Vector3(move_dir, 0, 0)
+				facing_right = move_dir > 0
 		
 		if is_on_floor():
 			y_velo = -0.1
@@ -121,7 +125,14 @@ func hook():
 				var screen_pos = camera.unproject_position(raycast.global_transform.origin)
 				var distance = screen_pos.distance_to(mouse_position)
 				
-				if distance < closest_distance and raycast.is_colliding():
+				# Check if the raycast is on the allowed side based on the mouse position
+				var is_allowed_side = false
+				if facing_right and raycast.name in ["GrappleRaycast", "GrappleRaycast2", "GrappleRaycast5", "GrappleRaycast6"]:
+					is_allowed_side = true
+				elif not facing_right and raycast.name in ["GrappleRaycast3", "GrappleRaycast4", "GrappleRaycast7", "GrappleRaycast8"]:
+					is_allowed_side = true
+				
+				if is_allowed_side and distance < closest_distance and raycast.is_colliding():
 					closest_raycast = raycast
 					closest_distance = distance
 		
@@ -130,6 +141,7 @@ func hook():
 			grapple_direction = (hook_pos - global_position).normalized()
 			grapple_timer = 0
 			hooked = true
+			swing_angle = 0.0
 	else:
 		hooked = false
 
@@ -137,27 +149,19 @@ func grapple(delta):
 	grapple_timer += delta
 	
 	if grapple_timer < grapple_duration:
-		var time_ratio = grapple_timer / grapple_duration
-		var parabola_height = 5.0  # Adjust this value to change the height of the parabola
-		var parabola_vertex = global_position + grapple_direction * parabola_height
+		# Calculate the swing motion
+		swing_angle += SWING_SPEED * delta
 		
-		var start_pos = global_position
-		var end_pos = hook_pos
-		var control_point = parabola_vertex
+		var swing_offset = Vector3(
+			sin(swing_angle) * SWING_RADIUS,
+			-cos(swing_angle) * SWING_RADIUS,
+			0
+		)
 		
-		var parabola_pos = calculate_parabola_point(start_pos, end_pos, control_point, time_ratio)
-		custom_velocity = (parabola_pos - global_position) / delta
+		var start_pos = hook_pos
+		var end_pos = hook_pos + swing_offset
+		
+		custom_velocity = (end_pos - global_position) * GRAPPLE_SPEED
 	else:
 		custom_velocity = grapple_direction * GRAPPLE_SPEED
 		hooked = false
-
-func calculate_parabola_point(start_pos, end_pos, control_point, t):
-	var p0 = start_pos
-	var p1 = control_point
-	var p2 = end_pos
-	
-	var q0 = p0.lerp(p1, t)
-	var q1 = p1.lerp(p2, t)
-	var r = q0.lerp(q1, t)
-	
-	return r
