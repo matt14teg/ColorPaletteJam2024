@@ -1,9 +1,7 @@
 res://stage.tscn
 res://tileset.tres
 res://TestTile.tres
-res://test_player.tscn
 res://scenes/test_scene.tscn
+res://test_player.tscn
 res://projectile.tscn
-res://player/player.gd
-res://Projectile.gd
-res://test_player.gd
+res://line.tscn
