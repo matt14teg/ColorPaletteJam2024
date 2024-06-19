@@ -16,7 +16,7 @@ const DASH_FORCE = 10
 const DASH_DURATION = 0.2
 const GRAPPLE_SPEED = 10
 const GRAPPLE_MAX_SPEED = 30
-const SWING_FORCE = 20
+const SWING_FORCE = 10
 const SWING_DAMPING = 0.01
 const SWING_FALL_SPEED = 1.0
 const SWING_ACCELERATION = 40
@@ -135,6 +135,11 @@ func update_dash(delta):
 		if dash_timer >= DASH_DURATION:
 			is_dashing = false
 			dash_timer = 0
+		else:
+			# Smoothly interpolate the velocity during dashing
+			var dash_progress = dash_timer / DASH_DURATION
+			var target_velocity = Vector3(DASH_FORCE * dash_direction, 0, 0)
+			custom_velocity = custom_velocity.lerp(target_velocity, dash_progress)
 
 func setup_grapple_line():
 	grapple_line = MeshInstance3D.new()
@@ -161,7 +166,7 @@ func update_grapple_line():
 		grapple_line.visible = false
 
 func handle_grapple(delta):
-	if Input.is_action_just_pressed(\"grapple\") and not hooked and active_projectile == null:
+	if Input.is_action_just_pressed(\"grapple\") and active_projectile == null:
 		shoot_grapple()
 	
 	if hooked:
@@ -215,9 +220,6 @@ func grapple_movement(delta):
 	hook_direction = hook_direction.normalized()
 	
 	var distance_to_hook = global_position.distance_to(hook_pos)
-	
-	velocity = velocity.lerp(custom_velocity, 0.8)
-	custom_velocity = custom_velocity.lerp(velocity, 0.2)
 
 	if distance_to_hook > GRAPPLE_MAX_DISTANCE:
 		# Limit the character's position to the maximum grapple distance
@@ -233,9 +235,9 @@ func grapple_movement(delta):
 		# Apply additional force in the direction of the swing based on \"W\" and \"D\" keys
 		var additional_force = Vector3.ZERO
 		if Input.is_action_pressed(\"move_left\"):
-			additional_force -= hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE
+			additional_force -= hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE * delta
 		if Input.is_action_pressed(\"move_right\"):
-			additional_force += hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE
+			additional_force += hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE * delta
 
 		# Apply upward movement when \"W\" key is pressed
 		var upward_velocity = Vector3.ZERO
@@ -254,18 +256,22 @@ func grapple_movement(delta):
 		# Apply swing damping to gradually reduce the swing velocity
 		swing_velocity *= 1 - SWING_DAMPING * delta
 
-		# Smooth out the character's movement
-		velocity = velocity.lerp(custom_velocity, 0.8)
+		# Smooth out the character's movement using linear interpolation
+		var target_velocity = custom_velocity
 		custom_velocity = custom_velocity.lerp(velocity, 0.2)
+		velocity = velocity.lerp(target_velocity, 0.8)
 
 		if Input.is_action_just_released(\"grapple\"):
-			# Apply a vertical boost when releasing the grapple
-			custom_velocity.y += JUMP_FORCE
+			# Calculate the release velocity based on the current swing momentum
+			var release_velocity = custom_velocity * SWING_FORCE
+
+			# Apply the release velocity to the character
+			custom_velocity = release_velocity
 
 		custom_velocity.y -= SWING_FALL_SPEED * delta
 		global_position += custom_velocity * delta
 
-	# Check for collision with SPHERE node (assuming it's in the 2D plane)
+	# Check for collision with SPHERE node 
 	var sphere_node = get_node_or_null(\"SPHERE\")
 	if sphere_node and sphere_node.get_child_count() > 0:
 		var sphere_collider = sphere_node.get_child(0)
