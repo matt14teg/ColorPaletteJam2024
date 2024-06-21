@@ -1,208 +1,296 @@
-class_name Player
-extends RigidBody2D
+extends CharacterBody3D
 
-const WALK_ACCEL = 1000.0
-const WALK_DEACCEL = 1000.0
-const WALK_MAX_VELOCITY = 200.0
-const AIR_ACCEL = 250.0
-const AIR_DEACCEL = 250.0
-const JUMP_VELOCITY = 380.0
-const STOP_JUMP_FORCE = 450.0
-const MAX_SHOOT_POSE_TIME = 0.3
-const MAX_FLOOR_AIRBORNE_TIME = 0.15
+var speed = 450
+var gravHook = 100
+const MOVE_SPEED = 7
+const JUMP_FORCE = 8.5
+const GRAVITY = 20
+const MAX_FALL_SPEED = 30
+const DASH_FORCE = 20
+const DASH_DURATION = 0.2
+const GRAPPLE_SPEED = 20
+const SWING_RADIUS = 5.0
+const SWING_SPEED = 2.0
 
-const BULLET_SCENE = preload("res://player/bullet.tscn")
-const ENEMY_SCENE = preload("res://enemy/enemy.tscn")
+var y_velo = 0
+var facing_right = true
+var is_jumping = false
+var is_dashing = false
+var dash_timer = 0
+var dash_direction = Vector3.ZERO
+var custom_velocity = Vector3()
+var hook_pos = Vector3()
+var hooked = false
+var grapple_direction = Vector3()  # Renamed to avoid shadowing
+var grapple_timer = 0
+var grapple_duration = 1.0
+var swing_angle = 0.0
 
-var anim := ""
-var siding_left := false
-var jumping := false
-var stopping_jump := false
-var shooting := false
+var line_mesh: ImmediateMesh
+var line_material: StandardMaterial3D
 
-var floor_h_velocity: float = 0.0
+var projectile_speed = 20.0
+var latch_point = null
+var rope_length = 10.0
+var swing_force = 10.0
+var gravity_force = 9.8
+var projectile = null
 
-var airborne_time: float = 1e20
-var shoot_time: float = 1e20
+var projectile_path = []
+var projectile_hit = false
 
-@onready var sound_jump := $SoundJump as AudioStreamPlayer2D
-@onready var sound_shoot := $SoundShoot as AudioStreamPlayer2D
-@onready var sprite := $Sprite2D as Sprite2D
-@onready var sprite_smoke := sprite.get_node(^"Smoke") as CPUParticles2D
-@onready var animation_player := $AnimationPlayer as AnimationPlayer
-@onready var bullet_shoot := $BulletShoot as Marker2D
+@onready var grapple_hook = $GrappleHook
 
+func _ready():
+	# Create the line mesh and material
+	line_mesh = ImmediateMesh.new()
+	line_material = StandardMaterial3D.new()
+	line_material.vertex_color_use_as_albedo = true
+	
+	# Add the line mesh to the scene
+	var line_mesh_instance = MeshInstance3D.new()
+	line_mesh_instance.mesh = line_mesh
+	line_mesh_instance.material_override = line_material
+	add_child(line_mesh_instance)
 
-func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
-	var velocity := state.get_linear_velocity()
-	var step := state.get_step()
+func gravity():
+	custom_velocity.y += gravHook
+	custom_velocity.x += gravHook
 
-	var new_anim := anim
-	var new_siding_left := siding_left
-
-	# Get player input.
-	var move_left := Input.is_action_pressed(&"move_left")
-	var move_right := Input.is_action_pressed(&"move_right")
-	var jump := Input.is_action_pressed(&"jump")
-	var shoot := Input.is_action_pressed(&"shoot")
-	var spawn := Input.is_action_just_pressed(&"spawn")
-
-	if spawn:
-		_spawn_enemy_above.call_deferred()
-
-	# Deapply prev floor velocity.
-	velocity.x -= floor_h_velocity
-	floor_h_velocity = 0.0
-
-	# Find the floor (a contact with upwards facing collision normal).
-	var found_floor := false
-	var floor_index := -1
-
-	for contact_index in state.get_contact_count():
-		var collision_normal = state.get_contact_local_normal(contact_index)
-
-		if collision_normal.dot(Vector2(0, -1)) > 0.6:
-			found_floor = true
-			floor_index = contact_index
-
-	# A good idea when implementing characters of all kinds,
-	# compensates for physics imprecision, as well as human reaction delay.
-	if shoot and not shooting:
-		_shot_bullet.call_deferred()
+func _process(_delta):
+	if hooked:
+		# Clear the line mesh
+		line_mesh.clear_surfaces()
+		
+		# Begin drawing the line
+		line_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		
+		# Add the start and end points of the line
+		var start_pos = global_transform.origin
+		var end_pos = hook_pos
+		line_mesh.surface_add_vertex(start_pos)
+		line_mesh.surface_add_vertex(end_pos)
+		
+		# Set the line color
+		line_mesh.surface_set_color(Color.BLACK)
+		line_mesh.surface_set_color(Color.BLACK)
+		
+		# End drawing the line
+		line_mesh.surface_end()
 	else:
-		shoot_time += step
-
-	if found_floor:
-		airborne_time = 0.0
+		# Clear the line mesh when not hooked
+		line_mesh.clear_surfaces()
+	
+	# Draw projectile path
+	if projectile and is_instance_valid(projectile):
+		line_mesh.clear_surfaces()
+		line_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		
+		var start_pos = global_position
+		var end_pos = projectile.global_position
+		
+		line_mesh.surface_add_vertex(start_pos)
+		line_mesh.surface_add_vertex(end_pos)
+		
+		line_mesh.surface_set_color(Color.RED)
+		line_mesh.surface_set_color(Color.RED)
+		
+		line_mesh.surface_end()
+		
+func _physics_process(delta):
+	gravity()
+	
+	if is_inside_tree():
+		hook()
+		update_grapple_hook_position()
+	
+	if hooked:
+		grapple(delta)
 	else:
-		airborne_time += step # Time it spent in the air.
-
-	var on_floor := airborne_time < MAX_FLOOR_AIRBORNE_TIME
-
-	# Process jump.
-	if jumping:
-		if velocity.y > 0:
-			# Set off the jumping flag if going down.
-			jumping = false
-		elif not jump:
-			stopping_jump = true
-
-		if stopping_jump:
-			velocity.y += STOP_JUMP_FORCE * step
-
-	if on_floor:
-		# Process logic when character is on floor.
-		if move_left and not move_right:
-			if velocity.x > -WALK_MAX_VELOCITY:
-				velocity.x -= WALK_ACCEL * step
-		elif move_right and not move_left:
-			if velocity.x < WALK_MAX_VELOCITY:
-				velocity.x += WALK_ACCEL * step
+		var move_dir = Input.get_axis("move_left", "move_right")
+		if not is_dashing:
+			custom_velocity.x = move_dir * MOVE_SPEED
+			if move_dir != 0:
+				dash_direction = Vector3(move_dir, 0, 0)
+				facing_right = move_dir > 0
+		
+		if is_on_floor():
+			y_velo = -0.1
+			is_jumping = false
+			if Input.is_action_just_pressed("jump"):
+				y_velo = JUMP_FORCE
+				is_jumping = true
 		else:
-			var xv := absf(velocity.x)
-			xv -= WALK_DEACCEL * step
-			if xv < 0:
-				xv = 0
-			velocity.x = signf(velocity.x) * xv
+			y_velo -= GRAVITY * delta
+			y_velo = max(y_velo, -MAX_FALL_SPEED)
+		
+		if Input.is_action_just_pressed("dash") and not is_dashing and dash_direction != Vector3.ZERO:
+			dash()
+		
+		if is_dashing:
+			dash_timer += delta
+			if dash_timer >= DASH_DURATION:
+				is_dashing = false
+				dash_timer = 0
+		
+		custom_velocity.y = y_velo
+		custom_velocity.z = 0  # Restrict Z-axis movement
+	
+	velocity = custom_velocity
+	move_and_slide()
 
-		# Check jump.
-		if not jumping and jump:
-			velocity.y = -JUMP_VELOCITY
-			jumping = true
-			stopping_jump = false
-			sound_jump.play()
+func dash():
+	is_dashing = true
+	custom_velocity = dash_direction * DASH_FORCE
 
-		# Check siding.
-		if velocity.x < 0 and move_left:
-			new_siding_left = true
-		elif velocity.x > 0 and move_right:
-			new_siding_left = false
-		if jumping:
-			new_anim = "jumping"
-		elif absf(velocity.x) < 0.1:
-			if shoot_time < MAX_SHOOT_POSE_TIME:
-				new_anim = "idle_weapon"
+func hook():
+	if Input.is_action_just_pressed("grapple"):
+		if projectile == null:
+			var character_middle_point = global_position
+			
+			# Calculate the projectile spawn position based on the character's facing direction
+			var projectile_spawn_position = character_middle_point
+			if facing_right:
+				projectile_spawn_position.x += 1.0  # Adjust the offset as needed
 			else:
-				new_anim = "idle"
-		else:
-			if shoot_time < MAX_SHOOT_POSE_TIME:
-				new_anim = "run_weapon"
-			else:
-				new_anim = "run"
+				projectile_spawn_position.x -= 1.0  # Adjust the offset as needed
+			
+			projectile = preload("res://projectile.tscn").instantiate()
+			projectile.global_position = projectile_spawn_position
+			projectile.global_position.z = global_position.z
+			
+			get_parent().add_child(projectile)
+			
+			var mouse_position = get_viewport().get_mouse_position()
+			var projectile_direction = (mouse_position - get_viewport().size / 2).normalized()
+			projectile_direction.z = 0  # Restrict Z-axis direction
+			
+			projectile.linear_velocity = projectile_direction * projectile_speed
+			
+			projectile_path = []
+			projectile_hit = false
+			
+			print("Projectile fired from: ", projectile_spawn_position)
 	else:
-		# Process logic when the character is in the air.
-		if move_left and not move_right:
-			if velocity.x > -WALK_MAX_VELOCITY:
-				velocity.x -= AIR_ACCEL * step
-		elif move_right and not move_left:
-			if velocity.x < WALK_MAX_VELOCITY:
-				velocity.x += AIR_ACCEL * step
+		hooked = false
+		latch_point = null
+		if projectile:
+			projectile.queue_free()
+			projectile = null
+
+func update_grapple_hook_position():
+	grapple_hook.global_position = global_position
+
+func _on_projectile_body_entered(body):
+	if body != self and not hooked and is_instance_valid(projectile):
+		var collision_point = projectile.global_position
+		
+		# Check if the collision point is valid using raycasts
+		var closest_raycast = find_closest_raycast(collision_point)
+		
+		if closest_raycast:
+			hooked = true
+			latch_point = collision_point
+			grapple(get_physics_process_delta_time())
+			projectile.queue_free()
+			projectile = null
+			
+			print("Hooked onto: ", closest_raycast.name)
 		else:
-			var xv := absf(velocity.x)
-			xv -= AIR_DEACCEL * step
-
-			if xv < 0:
-				xv = 0
-			velocity.x = signf(velocity.x) * xv
-
-		if velocity.y < 0:
-			if shoot_time < MAX_SHOOT_POSE_TIME:
-				new_anim = "jumping_weapon"
-			else:
-				new_anim = "jumping"
-		else:
-			if shoot_time < MAX_SHOOT_POSE_TIME:
-				new_anim = "falling_weapon"
-			else:
-				new_anim = "falling"
-
-	# Update siding.
-	if new_siding_left != siding_left:
-		if new_siding_left:
-			sprite.scale.x = -1
-		else:
-			sprite.scale.x = 1
-
-		siding_left = new_siding_left
-
-	# Change animation.
-	if new_anim != anim:
-		anim = new_anim
-		animation_player.play(anim)
-
-	shooting = shoot
-
-	# Apply floor velocity.
-	if found_floor:
-		floor_h_velocity = state.get_contact_collider_velocity_at_position(floor_index).x
-		velocity.x += floor_h_velocity
-
-	# Finally, apply gravity and set back the linear velocity.
-	velocity += state.get_total_gravity() * step
-	state.set_linear_velocity(velocity)
+			# No valid collision found, remove the projectile
+			projectile.queue_free()
+			projectile = null
 
 
-func _shot_bullet() -> void:
-	shoot_time = 0
-	var bullet := BULLET_SCENE.instantiate() as RigidBody2D
-	var speed_scale: float
-	if siding_left:
-		speed_scale = -1.0
+func find_closest_raycast(collision_point):
+	var closest_raycast = null
+	var closest_distance = INF
+	
+	for raycast in grapple_hook.get_children():
+		if raycast is RayCast3D:
+			raycast.global_position = collision_point
+			raycast.force_raycast_update()
+			
+			if raycast.is_colliding():
+				var distance = collision_point.distance_to(raycast.get_collision_point())
+				if distance < closest_distance:
+					closest_raycast = raycast
+					closest_distance = distance
+	
+	if closest_raycast:
+		print("Closest raycast: ", closest_raycast.name)
 	else:
-		speed_scale = 1.0
+		print("No valid raycast found")
+	
+	return closest_raycast
 
-	bullet.position = position + bullet_shoot.position * Vector2(speed_scale, 1.0)
-	get_parent().add_child(bullet)
+func grapple(delta):
+	if latch_point:
+		var rope_vector = latch_point - global_position
+		rope_vector.z = 0  # Restrict Z-axis movement
+		var rope_direction = rope_vector.normalized()
+		var rope_distance = rope_vector.length()
+		
+		if rope_distance > rope_length:
+			var excess_distance = rope_distance - rope_length
+			global_position += rope_direction * excess_distance
+		
+		var swing_direction = -rope_direction
+		swing_direction.y = 0
+		custom_velocity += swing_direction * swing_force
+		
+		custom_velocity.y -= gravity_force * delta
+		custom_velocity.z = 0  # Restrict Z-axis movement
+		
+		# Move the character towards the latch point
+		var grapple_movement_direction = (latch_point - global_position).normalized()  # Renamed variable
+		grapple_movement_direction.z = 0  # Restrict Z-axis movement
+		custom_velocity += grapple_movement_direction * GRAPPLE_SPEED
+		
+		var space_state = get_world_3d().direct_space_state
+		var ray_params = PhysicsRayQueryParameters3D.new()
+		ray_params.from = latch_point
+		ray_params.to = global_position
+		ray_params.collide_with_areas = true
+		ray_params.collide_with_bodies = true
+		
+		var obstacle_collision = space_state.intersect_ray(ray_params)
+		if obstacle_collision:
+			var obstacle_position = obstacle_collision.position
+			obstacle_position.z = global_position.z  # Set the Z-axis of the obstacle position to match the player's Z position
+			var corner_positions = find_closest_corners(obstacle_position)
+			var closest_corner = find_closest_point(corner_positions, global_position)
+			latch_point = closest_corner
 
-	bullet.linear_velocity = Vector2(400.0 * speed_scale, -40)
+func find_closest_corners(obstacle_position):
+	var corner_positions = []
+	var unit_distance = 1.0
+	
+	for i in range(4):
+		var corner_offset = Vector3.ZERO
+		match i:
+			0: # Top-left corner
+				corner_offset = Vector3(-unit_distance, unit_distance, 0)
+			1: # Top-right corner
+				corner_offset = Vector3(unit_distance, unit_distance, 0)
+			2: # Bottom-left corner
+				corner_offset = Vector3(-unit_distance, -unit_distance, 0)
+			3: # Bottom-right corner
+				corner_offset = Vector3(unit_distance, -unit_distance, 0)
+		
+		var corner_position = obstacle_position + corner_offset
+		corner_positions.append(corner_position)
+	
+	return corner_positions
 
-	sprite_smoke.restart()
-	sound_shoot.play()
-
-	add_collision_exception_with(bullet) # Make bullet and this not collide.
-
-
-func _spawn_enemy_above() -> void:
-	var enemy := ENEMY_SCENE.instantiate() as RigidBody2D
-	enemy.position = position + 50 * Vector2.UP
-	get_parent().add_child(enemy)
+func find_closest_point(points, target):
+	var closest_point = null
+	var closest_distance = INF
+	
+	for point in points:
+		var distance = point.distance_to(target)
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_point = point
+	
+	return closest_point
