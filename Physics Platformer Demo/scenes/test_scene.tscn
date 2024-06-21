@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://onh6ph7vyocl"]
+[gd_scene load_steps=4 format=3 uid="uid://onh6ph7vyocl"]
 
 [ext_resource type="MeshLibrary" uid="uid://c6s1lqw3decet" path="res://TestTile.tres" id="1_irek7"]
 [ext_resource type="PackedScene" uid="uid://b76cxogw2yqyl" path="res://test_player.tscn" id="2_np1g2"]
+[ext_resource type="PackedScene" uid="uid://cpua55b7tlmqb" path="res://enemy_test.tscn" id="3_ckjyy"]
 
 [node name="Node3D" type="Node3D"]
 
@@ -63,3 +64,11 @@ use_collision = true
 
 [node name="CSGSphere3D" type="CSGSphere3D" parent="SPHERE"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.982, 11.999, 0.5)
+
+[node name="Enemy" parent="." instance=ExtResource("3_ckjyy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5476, 0, 0.836996)
+test = 1000
+
+[node name="Enemy2" parent="." instance=ExtResource("3_ckjyy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.89758, 0, 1.19719)
+test = 99975

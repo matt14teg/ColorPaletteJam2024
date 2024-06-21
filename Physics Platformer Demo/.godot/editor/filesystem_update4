@@ -4,3 +4,5 @@ res://TestTile.tres
 res://scenes/test_scene.tscn
 res://test_player.tscn
 res://projectile.tscn
+res://Node3D.gd
+res://enemy_test.tscn
