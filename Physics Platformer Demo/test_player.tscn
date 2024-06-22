@@ -413,4 +413,5 @@ mesh = SubResource("SphereMesh_tairy")
 [node name="BallMesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.57749, 0)
 
+
 [editable path="Projectile"]
