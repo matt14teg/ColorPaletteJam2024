@@ -64,3 +64,4 @@ player.webp::CompressedTexture2D::7714494548390755289::1718153864::1718153871::1
 ::res://scenes/::1718943446
 test_scene.tscn::PackedScene::1009961900442486743::1718943446::0::1::::<><>::uid://c6s1lqw3decet::::res://TestTile.tres<>uid://b76cxogw2yqyl::::res://test_player.tscn<>uid://cpua55b7tlmqb::::res://enemy_test.tscn
 tileset_edit.tscn::PackedScene::-1::1718937186::0::1::::<><>::res://tiles_demo.png
+
