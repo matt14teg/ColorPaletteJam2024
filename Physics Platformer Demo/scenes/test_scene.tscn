@@ -29,8 +29,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.982, 11.999, 0.5)
 
 [node name="Enemy" parent="." instance=ExtResource("3_ckjyy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5476, 0, 0.836996)
-test = 1000
 
 [node name="Enemy2" parent="." instance=ExtResource("3_ckjyy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.89758, 0, 1.19719)
-test = 99975

@@ -10,4 +10,4 @@ var poo = 5
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	 #if an object from the player group collides with self, get object
-	print("hi")
+	poo = 7
