@@ -1,0 +1,56 @@
+[gd_scene load_steps=6 format=3 uid="uid://t5x6aaoxf85b"]
+
+[ext_resource type="PackedScene" uid="uid://p2atm6kdsxtb" path="res://models/guppy.glb" id="1_s3kl6"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_7wpqk"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_dxt73"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hnnwf"]
+render_priority = 0
+shader = ExtResource("3_dxt73")
+shader_parameter/Outline_Size = 0.1
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mcf5y"]
+next_pass = SubResource("ShaderMaterial_hnnwf")
+albedo_texture = ExtResource("2_7wpqk")
+
+[node name="guppy" instance=ExtResource("1_s3kl6")]
+
+[node name="BackFin" parent="Guppy" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="Body" parent="Guppy" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="LeftCheek" parent="Guppy" index="2"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="LeftEye" parent="Guppy" index="3"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="LeftEyebrow" parent="Guppy" index="4"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="LeftFin" parent="Guppy" index="5"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="Mouth" parent="Guppy" index="6"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="MouthHole" parent="Guppy/Mouth" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="RightCheek" parent="Guppy" index="7"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="RightEye" parent="Guppy" index="8"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="RightEyebrow" parent="Guppy" index="9"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="RightFin" parent="Guppy" index="10"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")
+
+[node name="TopFin" parent="Guppy" index="11"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mcf5y")

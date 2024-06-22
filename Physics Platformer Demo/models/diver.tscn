@@ -1,0 +1,141 @@
+[gd_scene load_steps=22 format=3 uid="uid://dnq7w5pbp5h2q"]
+
+[ext_resource type="PackedScene" uid="uid://dy21ljigdpw53" path="res://models/diver.glb" id="1_0n1rd"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_fpvj6"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_h5dql"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oyr2l"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_r00af"]
+next_pass = SubResource("ShaderMaterial_oyr2l")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b1ad0"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_47qim"]
+next_pass = SubResource("ShaderMaterial_b1ad0")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sqanm"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1gvtd"]
+next_pass = SubResource("ShaderMaterial_sqanm")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ecavq"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.5
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_at4ai"]
+next_pass = SubResource("ShaderMaterial_ecavq")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qq8ey"]
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_glltl"]
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vr8fs"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y031n"]
+next_pass = SubResource("ShaderMaterial_vr8fs")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uq08s"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_axfnr"]
+next_pass = SubResource("ShaderMaterial_uq08s")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fd131"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.1
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ityrn"]
+next_pass = SubResource("ShaderMaterial_fd131")
+albedo_texture = ExtResource("2_fpvj6")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_e4fqy"]
+render_priority = 0
+shader = ExtResource("3_h5dql")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q7oby"]
+next_pass = SubResource("ShaderMaterial_e4fqy")
+albedo_texture = ExtResource("2_fpvj6")
+
+[node name="diver" instance=ExtResource("1_0n1rd")]
+
+[node name="Body" parent="Diver" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_r00af")
+
+[node name="LeftArm" parent="Diver/Body" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_47qim")
+
+[node name="LeftFist" parent="Diver/Body/LeftArm" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_1gvtd")
+
+[node name="LeftLeg" parent="Diver/Body" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_at4ai")
+
+[node name="LeftFoot" parent="Diver/Body/LeftLeg" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_at4ai")
+
+[node name="Light3" parent="Diver/Body" index="2"]
+surface_material_override/0 = SubResource("StandardMaterial3D_qq8ey")
+
+[node name="Light4" parent="Diver/Body" index="3"]
+surface_material_override/0 = SubResource("StandardMaterial3D_glltl")
+
+[node name="RightArm" parent="Diver/Body" index="4"]
+surface_material_override/0 = SubResource("StandardMaterial3D_y031n")
+
+[node name="RightFist" parent="Diver/Body/RightArm" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_axfnr")
+
+[node name="RightLeg" parent="Diver/Body" index="5"]
+surface_material_override/0 = SubResource("StandardMaterial3D_at4ai")
+
+[node name="RightFoot" parent="Diver/Body/RightLeg" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_at4ai")
+
+[node name="Head" parent="Diver" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ityrn")
+
+[node name="Face" parent="Diver/Head" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ityrn")
+
+[node name="LeftEye" parent="Diver/Head/Face" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ityrn")
+
+[node name="RightEye" parent="Diver/Head/Face" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ityrn")
+
+[node name="Neckthing" parent="Diver/Head" index="3"]
+surface_material_override/0 = SubResource("StandardMaterial3D_q7oby")

@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://chdj3a2hcyuvx"]
+
+[ext_resource type="PackedScene" uid="uid://kbayig0ifhb6" path="res://models/wiggleworm3.glb" id="1_mj7yu"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_rlyxr"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_lnvjw"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d4i87"]
+render_priority = 0
+shader = ExtResource("3_lnvjw")
+shader_parameter/Outline_Size = 1.0
+shader_parameter/ColorParameter = Color(0.807843, 0, 0.290196, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p8f0q"]
+next_pass = SubResource("ShaderMaterial_d4i87")
+albedo_texture = ExtResource("2_rlyxr")
+
+[node name="wiggleworm3" instance=ExtResource("1_mj7yu")]
+
+[node name="Body" parent="WiggleWorm" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.42109e-14, 0, -1.42109e-14, 1, 0, 0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_p8f0q")
+
+[node name="Bowtie" parent="WiggleWorm" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.42109e-14, 0, -1.42109e-14, 1, 0, 0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_p8f0q")
+
+[node name="Glasses" parent="WiggleWorm" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.42109e-14, 0, -1.42109e-14, 1, 0, 0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_p8f0q")
+
+[node name="Left_Eye" parent="WiggleWorm" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.42109e-14, 0, -1.42109e-14, 1, 0, 0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_p8f0q")
+
+[node name="Right_Eye" parent="WiggleWorm" index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 1.42109e-14, 0, -1.42109e-14, 1, 0, 0, 0)
+surface_material_override/0 = SubResource("StandardMaterial3D_p8f0q")
