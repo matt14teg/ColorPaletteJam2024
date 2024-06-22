@@ -255,6 +255,8 @@ func handle_grapple(delta):
 		grapple_movement(delta)
 		if Input.is_action_just_released(\"grapple\"):
 			detach_grapple()
+
+
 func shoot_grapple():
 	print(\"Shooting Grapple\")
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -262,16 +264,21 @@ func shoot_grapple():
 	var from = global_transform.origin + Vector3(0, 1, 0)  # Offset to start from character's center
 	var to = camera.project_position(mouse_pos, FIXED_GRAPPLE_DISTANCE)
 	var direction = (to - from).normalized()
-	direction.z = 0
+	direction.z = 0 # Keep restriction on z-axis
 	
+	# End point of the ray determining launch direction for grapple hook
 	var end_point = from + direction * FIXED_GRAPPLE_DISTANCE
-	var space_state = get_world_3d().direct_space_state
+	# Used to get acces to the 3D world to query for current and potential collisions
+	var space_state = get_world_3d().direct_space_state 
+	# Used in conjunction with space_state to detect collisions
 	var query = PhysicsRayQueryParameters3D.new()
-	query.from = from
-	query.to = end_point
+	query.from = from 
+	query.to = end_point 
 	
+	# Collision data
 	var result = space_state.intersect_ray(query)
 	
+	# If we have collision data, the player can launch the grapple hook
 	if result:
 		var grapple_point = result.position
 		print(\"Grapple Point: \", grapple_point)
@@ -404,5 +411,7 @@ mesh = SubResource("CylinderMesh_6j4s6")
 mesh = SubResource("SphereMesh_tairy")
 
 [node name="BallMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.57749, 0)
+
 
 [editable path="Projectile"]
