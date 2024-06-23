@@ -1,0 +1,24 @@
+[gd_scene load_steps=6 format=3 uid="uid://dc622jeu4766e"]
+
+[ext_resource type="PackedScene" uid="uid://chl6al7rfnyw" path="res://models/wigglewormanimated.glb" id="1_tb0b2"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_jkhhx"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_ye7y8"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8hy5c"]
+render_priority = 0
+shader = ExtResource("3_ye7y8")
+shader_parameter/Outline_Size = 0.01
+shader_parameter/ColorParameter = Color(0.784314, 0.00784314, 0.309804, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_unc4c"]
+next_pass = SubResource("ShaderMaterial_8hy5c")
+albedo_texture = ExtResource("2_jkhhx")
+
+[node name="wigglewormanimated" instance=ExtResource("1_tb0b2")]
+
+[node name="Skeleton3D" parent="Armature" index="0"]
+bones/1/rotation = Quaternion(0.166066, -0.0105022, -0.0622349, 0.984093)
+bones/2/rotation = Quaternion(-0.157772, -0.0105965, -0.0597148, 0.985611)
+
+[node name="Glasses" parent="Armature/Skeleton3D" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_unc4c")

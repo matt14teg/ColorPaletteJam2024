@@ -73,6 +73,7 @@ void fragment() {
 
 }
 "
+graph_offset = Vector2(-95.413, -35.8195)
 modes/cull = 1
 nodes/vertex/2/node = SubResource("VisualShaderNodeFloatParameter_pe1ey")
 nodes/vertex/2/position = Vector2(-240, 280)
