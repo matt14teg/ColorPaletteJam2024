@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://kbayig0ifhb6"
-path="res://.godot/imported/wiggleworm3.glb-9f3a47dd419b027791e863789b43a6bd.scn"
+uid="uid://circtfvhxdiax"
+path="res://.godot/imported/wiggleworm4.glb-47d898797cbfeb48f3faece3f0e2fcf8.scn"
 
 [deps]
 
-source_file="res://models/wiggleworm3.glb"
-dest_files=["res://.godot/imported/wiggleworm3.glb-9f3a47dd419b027791e863789b43a6bd.scn"]
+source_file="res://models/wiggleworm4.glb"
+dest_files=["res://.godot/imported/wiggleworm4.glb-47d898797cbfeb48f3faece3f0e2fcf8.scn"]
 
 [params]
 
