@@ -12,6 +12,9 @@ material = SubResource("StandardMaterial3D_bjy5w")
 
 [node name="Enemy" type="Node3D" groups=["Player"]]
 script = ExtResource("1_afvlc")
+time = null
+distance_from_center = null
+enemy_type = null
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 

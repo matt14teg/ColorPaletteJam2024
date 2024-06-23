@@ -28,7 +28,9 @@ use_collision = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.5362, 8.3601, 0.5)
 
 [node name="Enemy" parent="." instance=ExtResource("3_ckjyy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5476, 0, 0.836996)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.69942, 0.0892258, 0.835809)
 
 [node name="Enemy2" parent="." instance=ExtResource("3_ckjyy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.89758, 0, 1.19719)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.08823, 5.77015, 1.19719)
+distance_from_center = 1.0
+enemy_type = 2

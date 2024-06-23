@@ -101,7 +101,7 @@ func setup_cursor_predictor():
 	
 	var mesh = ImmediateMesh.new()
 	cursor_predictor.mesh = mesh
-
+	
 	cursor_predictor.visible = true  # Ensure visibility is set to true
 
 
@@ -149,8 +149,8 @@ func update_cursor_predictor():
 		end_point = result.position
 	
 	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	immediate_mesh.surface_add_vertex(from - global_transform.origin)
-	immediate_mesh.surface_add_vertex(end_point - global_transform.origin)
+	immediate_mesh.surface_add_vertex(from - global_position)
+	immediate_mesh.surface_add_vertex(end_point - global_position)
 	immediate_mesh.surface_end()
 	cursor_predictor.visible = true  # Ensure it's visible
 
@@ -254,6 +254,7 @@ func handle_grapple(delta):
 	if hooked:
 		grapple_movement(delta)
 		if Input.is_action_just_released(\"grapple\"):
+			print(\"detatching grapple...\")
 			detach_grapple()
 
 
@@ -261,7 +262,7 @@ func shoot_grapple():
 	print(\"Shooting Grapple\")
 	var mouse_pos = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
-	var from = global_transform.origin + Vector3(0, 1, 0)  # Offset to start from character's center
+	var from = global_transform.origin + Vector3(0, 2, 0)  # Offset to start from character's center
 	var to = camera.project_position(mouse_pos, FIXED_GRAPPLE_DISTANCE)
 	var direction = (to - from).normalized()
 	direction.z = 0 # Keep restriction on z-axis
@@ -272,15 +273,23 @@ func shoot_grapple():
 	var space_state = get_world_3d().direct_space_state 
 	# Used in conjunction with space_state to detect collisions
 	var query = PhysicsRayQueryParameters3D.new()
-	query.from = from 
-	query.to = end_point 
+	query.from = Vector3(from.x, from.y, 0.5) 
+	query.to = Vector3(from.x, from.y, 0.5)
 	
 	# Collision data
 	var result = space_state.intersect_ray(query)
 	
+	if space_state:
+		print(\"Space State exists\")
+		
+	if(query):
+		print(\"Query exists\")
+		
+	
 	# If we have collision data, the player can launch the grapple hook
 	if result:
 		var grapple_point = result.position
+		
 		print(\"Grapple Point: \", grapple_point)
 		
 		if is_instance_valid(projectile):
@@ -296,8 +305,10 @@ func shoot_grapple():
 		hook_pos = grapple_point
 		grapple_direction = (grapple_point - from).normalized()
 		hooked = true
+		
 	else:
 		print(\"Can't grapple in that direction!\")
+		
 
 
 
@@ -396,6 +407,7 @@ mesh = SubResource("CapsuleMesh_qthqe")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.23472, 9.65786)
+fov = 100.0
 
 [node name="Projectile" parent="." instance=ExtResource("1_if3pt")]
 
@@ -411,6 +423,5 @@ mesh = SubResource("CylinderMesh_6j4s6")
 mesh = SubResource("SphereMesh_tairy")
 
 [node name="BallMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.57749, 0)
 
 [editable path="Projectile"]
