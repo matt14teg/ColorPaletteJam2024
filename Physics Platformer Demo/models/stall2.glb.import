@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://dvn0jop0r6y54"
-path="res://.godot/imported/stall.glb-42d87da8f196bcf0b39db9731efba231.scn"
+uid="uid://sn4vgfw216vq"
+path="res://.godot/imported/stall2.glb-51ed8302a0642f9e4c202e0427bfa0bf.scn"
 
 [deps]
 
-source_file="res://models/stall.glb"
-dest_files=["res://.godot/imported/stall.glb-42d87da8f196bcf0b39db9731efba231.scn"]
+source_file="res://models/stall2.glb"
+dest_files=["res://.godot/imported/stall2.glb-51ed8302a0642f9e4c202e0427bfa0bf.scn"]
 
 [params]
 
