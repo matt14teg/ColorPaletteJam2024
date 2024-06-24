@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c1et41fjvsa3x"]
 
-[ext_resource type="Script" path="res://scripts/Projectile.gd" id="1_qevf7"]
+[ext_resource type="Script" path="res://Projectile.gd" id="1_njgrn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_kguck"]
 
@@ -8,7 +8,7 @@
 
 [node name="Projectile" type="RigidBody3D"]
 axis_lock_linear_z = true
-script = ExtResource("1_qevf7")
+script = ExtResource("1_njgrn")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_kguck")
