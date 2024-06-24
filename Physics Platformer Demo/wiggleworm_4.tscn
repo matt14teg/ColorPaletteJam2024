@@ -1,0 +1,32 @@
+[gd_scene load_steps=6 format=3 uid="uid://j7cq1suofcwx"]
+
+[ext_resource type="PackedScene" uid="uid://circtfvhxdiax" path="res://models/wiggleworm4.glb" id="1_8ce1o"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_e6wmd"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_y8vt3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jcls1"]
+render_priority = 0
+shader = ExtResource("3_y8vt3")
+shader_parameter/Outline_Size = 1.0
+shader_parameter/ColorParameter = Color(0.807843, 0, 0.290196, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sjord"]
+next_pass = SubResource("ShaderMaterial_jcls1")
+albedo_texture = ExtResource("2_e6wmd")
+
+[node name="wiggleworm4" instance=ExtResource("1_8ce1o")]
+
+[node name="Body" parent="WiggleWorm" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_sjord")
+
+[node name="Bowtie" parent="WiggleWorm" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_sjord")
+
+[node name="Glasses" parent="WiggleWorm" index="2"]
+surface_material_override/0 = SubResource("StandardMaterial3D_sjord")
+
+[node name="Left_Eye" parent="WiggleWorm" index="3"]
+surface_material_override/0 = SubResource("StandardMaterial3D_sjord")
+
+[node name="Right_Eye" parent="WiggleWorm" index="4"]
+surface_material_override/0 = SubResource("StandardMaterial3D_sjord")

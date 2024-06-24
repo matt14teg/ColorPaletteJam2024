@@ -1,0 +1,41 @@
+[gd_scene load_steps=6 format=3 uid="uid://6661ersd8k35"]
+
+[ext_resource type="PackedScene" uid="uid://c3pnajf81rr18" path="res://models/shark.glb" id="1_e2371"]
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_lj8gg"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_drxfy"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qwin8"]
+render_priority = 0
+shader = ExtResource("3_drxfy")
+shader_parameter/Outline_Size = 0.2
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ssxi1"]
+next_pass = SubResource("ShaderMaterial_qwin8")
+albedo_texture = ExtResource("2_lj8gg")
+
+[node name="shark" instance=ExtResource("1_e2371")]
+
+[node name="Body" parent="Shark" index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="LeftFin" parent="Shark" index="1"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="RearFin" parent="Shark" index="2"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="RightFin" parent="Shark" index="3"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="TailFin" parent="Shark" index="4"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="TeethBottom" parent="Shark" index="5"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="TeethTop" parent="Shark" index="6"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")
+
+[node name="Tongue" parent="Shark" index="7"]
+surface_material_override/0 = SubResource("StandardMaterial3D_ssxi1")

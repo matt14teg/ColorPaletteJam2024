@@ -1,0 +1,93 @@
+[gd_resource type="VisualShader" load_steps=9 format=3 uid="uid://ckwp363ojy4nk"]
+
+[ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="1_0a4mh"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_v6yfj"]
+parameter_name = "ColorParameter"
+default_value_enabled = true
+default_value = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_b47xg"]
+texture = ExtResource("1_0a4mh")
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_pe1ey"]
+parameter_name = "Outline_Size"
+default_value_enabled = true
+default_value = 0.2
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_s3th3"]
+input_name = "normal"
+
+[sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_q0chp"]
+operator = 2
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_i28wg"]
+input_name = "vertex"
+
+[sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_kk2qf"]
+
+[resource]
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_front, diffuse_lambert, specular_schlick_ggx;
+
+uniform float Outline_Size = 0.20000000298023;
+uniform vec4 ColorParameter : source_color = vec4(0.160784, 0.125490, 0.258824, 1.000000);
+
+
+
+void vertex() {
+// Input:3
+	vec3 n_out3p0 = NORMAL;
+
+
+// FloatParameter:2
+	float n_out2p0 = Outline_Size;
+
+
+// VectorOp:4
+	vec3 n_out4p0 = n_out3p0 * vec3(n_out2p0);
+
+
+// Input:5
+	vec3 n_out5p0 = VERTEX;
+
+
+// VectorOp:6
+	vec3 n_out6p0 = n_out4p0 + n_out5p0;
+
+
+// Output:0
+	VERTEX = n_out6p0;
+
+
+}
+
+void fragment() {
+// ColorParameter:2
+	vec4 n_out2p0 = ColorParameter;
+
+
+// Output:0
+	ALBEDO = vec3(n_out2p0.xyz);
+
+
+}
+"
+graph_offset = Vector2(-95.413, -35.8195)
+modes/cull = 1
+nodes/vertex/2/node = SubResource("VisualShaderNodeFloatParameter_pe1ey")
+nodes/vertex/2/position = Vector2(-240, 280)
+nodes/vertex/3/node = SubResource("VisualShaderNodeInput_s3th3")
+nodes/vertex/3/position = Vector2(-280, 160)
+nodes/vertex/4/node = SubResource("VisualShaderNodeVectorOp_q0chp")
+nodes/vertex/4/position = Vector2(20, 160)
+nodes/vertex/5/node = SubResource("VisualShaderNodeInput_i28wg")
+nodes/vertex/5/position = Vector2(-100, 520)
+nodes/vertex/6/node = SubResource("VisualShaderNodeVectorOp_kk2qf")
+nodes/vertex/6/position = Vector2(200, 260)
+nodes/vertex/connections = PackedInt32Array(3, 0, 4, 0, 2, 0, 4, 1, 4, 0, 6, 0, 5, 0, 6, 1, 6, 0, 0, 0)
+nodes/fragment/2/node = SubResource("VisualShaderNodeColorParameter_v6yfj")
+nodes/fragment/2/position = Vector2(-20, 80)
+nodes/fragment/3/node = SubResource("VisualShaderNodeTexture_b47xg")
+nodes/fragment/3/position = Vector2(-232.011, 210.212)
+nodes/fragment/connections = PackedInt32Array(2, 0, 0, 0)

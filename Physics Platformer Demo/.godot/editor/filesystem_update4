@@ -1,7 +1,5 @@
-res://stage.tscn
+res://Node3D.gd
 res://tileset.tres
 res://TestTile.tres
-res://scenes/test_scene.tscn
-res://test_player.tscn
-res://projectile.tscn
-res://test_player.gd
+
+res://models/outlineshader.tres
