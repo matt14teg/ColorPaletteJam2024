@@ -4,3 +4,4 @@ res://TestTile.tres
 res://scenes/test_scene.tscn
 res://test_player.tscn
 res://projectile.tscn
+res://test_player.gd
