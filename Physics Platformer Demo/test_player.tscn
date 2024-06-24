@@ -424,5 +424,4 @@ mesh = SubResource("SphereMesh_tairy")
 
 [node name="BallMesh" type="MeshInstance3D" parent="."]
 
-
 [editable path="Projectile"]
