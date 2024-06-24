@@ -25,6 +25,7 @@ const RAYCAST_COUNT = 32
 const RAYCAST_ARC_ANGLE = PI
 const PREDICTOR_SHOW_DISTANCE = 20.0
 const MOUSE_SNAP_ANGLE = PI / 16
+const MAX_GRAPPLE_SPEED = 10.0
 
 # Node references
 @onready var grapple_line: MeshInstance3D = $GrappleLine
@@ -246,40 +247,46 @@ func shoot_grapple():
 		hooked = true
 		velocity = Vector3.ZERO
 
-func grapple_movement(delta):
-	var hook_direction = (hook_pos - global_transform.origin).normalized()
-	var distance_to_hook = global_transform.origin.distance_to(hook_pos)
+const GRAPPLE_STIFFNESS = 100.0  # How strongly the grapple pulls
+const GRAPPLE_DAMPING = 5.0      # Reduces oscillation
+const PLAYER_MOVE_FORCE = 500.0  # Force applied by player input
 
-	# Calculate the swing direction based on player input
-	var swing_direction = Vector3(Input.get_axis(\"move_left\", \"move_right\"), 0, 0)
-	
-	# Calculate the swing force based on the swing direction and hook direction
-	var swing_force = swing_direction.cross(hook_direction) * GRAPPLE_SWING_FORCE
-	
-	# Calculate the pull force based on the move_up input
-	var pull_force = Vector3.ZERO
-	if Input.is_action_pressed(\"move_up\"):
-		pull_force = hook_direction * GRAPPLE_PULL_SPEED
-	
-	# Calculate the total force by combining the swing force, pull force, and gravity
-	var total_force = swing_force + pull_force - Vector3.UP * GRAVITY
-	
-	# Update the velocity based on the total force
+func grapple_movement(delta):
+	var to_hook = hook_pos - global_transform.origin
+	var distance_to_hook = to_hook.length()
+	var hook_direction = to_hook.normalized()
+
+	# Player input
+	var move_input = Vector2(Input.get_axis(\"move_left\", \"move_right\"), Input.get_axis(\"move_down\", \"move_up\"))
+
+	# Spring force (pulls player towards grapple point)
+	var spring_force = hook_direction * (distance_to_hook - MAX_GRAPPLE_LENGTH) * GRAPPLE_STIFFNESS
+
+	# Damping force (reduces oscillation)
+	var damping_force = -velocity * GRAPPLE_DAMPING
+
+	# Player-controlled force
+	var tangent = Vector3(-hook_direction.y, hook_direction.x, 0).normalized()
+	var player_force = (tangent * move_input.x + hook_direction * move_input.y) * PLAYER_MOVE_FORCE
+
+	# Gravity
+	var gravity_force = Vector3.DOWN * GRAVITY
+
+	# Total force
+	var total_force = spring_force + damping_force + player_force + gravity_force
+
+	# Update velocity (F = ma, assume mass = 1)
 	velocity += total_force * delta
-	
-	# Limit the velocity to prevent excessive speed
-	var max_velocity = 20.0
-	if velocity.length() > max_velocity:
-		velocity = velocity.normalized() * max_velocity
-	
-	# Update the character's position based on the velocity
+
+	# Move the character
 	global_transform.origin += velocity * delta
-	
-	# Limit the character's position to the maximum grapple range
-	if distance_to_hook > MAX_GRAPPLE_LENGTH:
-		global_transform.origin = hook_pos + (global_transform.origin - hook_pos).normalized() * MAX_GRAPPLE_LENGTH
-	
-	global_transform.origin.z = 0  # Ensure z-axis remains at 0
+
+	# Keep z-coordinate at 0
+	global_transform.origin.z = 0
+
+	print(\"Position: \", global_transform.origin)
+	print(\"Velocity: \", velocity)
+	print(\"Distance to hook: \", distance_to_hook)
 
 func update_grapple_line():
 	var immediate_mesh = grapple_line.mesh as ImmediateMesh
@@ -295,7 +302,12 @@ func update_grapple_line():
 
 func detach_grapple():
 	hooked = false
-	velocity = velocity.normalized() * GRAPPLE_SWING_FORCE * 0.5  # Reduce the velocity when detaching
+	
+	# Calculate the launch velocity based on the current velocity
+	var launch_velocity = velocity * 1.5  # Adjust the multiplier as needed
+	
+	# Apply the launch velocity to the character
+	velocity = launch_velocity
 	
 func find_closest_raycast(direction):
 	var closest_raycast = null
