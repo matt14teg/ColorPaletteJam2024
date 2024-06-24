@@ -14,33 +14,18 @@ const GRAVITY = 20.0
 const MAX_FALL_SPEED = 30.0
 const DASH_FORCE = 10.0
 const DASH_DURATION = 0.2
+const GRAPPLE_DISTANCE = 10.0
 const GRAPPLE_SPEED = 10.0
-const GRAPPLE_MAX_SPEED = 30.0
-const SWING_FORCE = 10.0
-const SWING_DAMPING = 0.01
-const SWING_FALL_SPEED = 1.0
-const SWING_ACCELERATION = 40.0
-const SPHERE_SPEED_BOOST = 1.5
-const FIXED_GRAPPLE_DISTANCE = 10.0
+const GRAPPLE_PULL_SPEED = 5.0
+const GRAPPLE_SWING_FORCE = 10.0
+const MAX_GRAPPLE_LENGTH = 15.0  # Maximum grapple line length
 const COYOTE_TIME = 0.1
 const JUMP_BUFFER_TIME = 0.1
 const RAYCAST_COUNT = 32
 const RAYCAST_ARC_ANGLE = PI
-const PREDICTOR_SHOW_DISTANCE = 20.0  # Increased to show further
+const PREDICTOR_SHOW_DISTANCE = 20.0
 const MOUSE_SNAP_ANGLE = PI / 16
-
-
-# Projectile class
-class Projectile extends RigidBody3D:
-	var speed = 10.0
-	signal collided(collision)
-	
-	func _physics_process(delta):
-		var collision = move_and_collide(linear_velocity.normalized() * speed * delta)
-		if collision:
-			emit_signal(\"collided\", collision)
-			print(\"COLLISION DETECHTED\")
-			queue_free()
+const MAX_GRAPPLE_SPEED = 10.0
 
 # Node references
 @onready var grapple_line: MeshInstance3D = $GrappleLine
@@ -58,9 +43,7 @@ var dash_direction = Vector2.ZERO
 var hook_pos = Vector3.ZERO
 var hooked = false
 var grapple_direction = Vector3.ZERO
-var swing_velocity = Vector3.ZERO
 var jump_count = 0
-var projectile: Projectile = null
 var coyote_timer = 0.0
 var jump_buffer_timer = 0.0
 var is_ball_state = false
@@ -71,12 +54,13 @@ func _ready():
 	setup_cursor_predictor()
 	setup_raycasts()
 	ball_mesh.visible = false
-	cursor_predictor.visible = true  # Always show cursor predictor
+	cursor_predictor.visible = true
 
 func _process(delta):
 	update_raycast_positions()
 	update_grapple_line()
 	update_cursor_predictor()
+
 func _physics_process(delta):
 	if not is_ball_state:
 		handle_movement(delta)
@@ -93,42 +77,28 @@ func setup_grapple_line():
 	grapple_line.material_override = material
 	grapple_line.mesh = ImmediateMesh.new()
 
-
-# 
 func setup_cursor_predictor():
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1, 1, 1, 0.5)  # Semi-transparent white
+	material.albedo_color = Color(1, 1, 1, 0.5)
 	material.flags_unshaded = true
 	cursor_predictor.material_override = material
 	
 	var mesh = ImmediateMesh.new()
 	cursor_predictor.mesh = mesh
 	
-	cursor_predictor.visible = true  # Ensure visibility is set to true
-
-
+	cursor_predictor.visible = true
 
 func setup_raycasts():
 	for i in range(RAYCAST_COUNT):
 		var raycast = RayCast3D.new()
 		raycast.enabled = true
-		raycast.collision_mask = 1  # Adjust this to match your collision layers
-		raycast.target_position = Vector3(FIXED_GRAPPLE_DISTANCE, 0, 0)
-		raycast.visible = false  # Hide the raycast visualization
+		raycast.collision_mask = 1
+		raycast.target_position = Vector3(GRAPPLE_DISTANCE, 0, 0)
+		raycast.visible = false
 		add_child(raycast)
 		raycasts.append(raycast)
 
-func update_grapple_line():
-	var immediate_mesh = grapple_line.mesh as ImmediateMesh
-	immediate_mesh.clear_surfaces()
-	if hooked:
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-		immediate_mesh.surface_add_vertex(Vector3.ZERO)  # Local space of the player
-		immediate_mesh.surface_add_vertex(hook_pos - global_transform.origin)
-		immediate_mesh.surface_end()
-		grapple_line.visible = true
-	else:
-		grapple_line.visible = false
+
 func update_cursor_predictor():
 	var immediate_mesh = cursor_predictor.mesh as ImmediateMesh
 	immediate_mesh.clear_surfaces()
@@ -139,7 +109,7 @@ func update_cursor_predictor():
 	var to = camera.project_position(mouse_pos, PREDICTOR_SHOW_DISTANCE)
 	var direction = (to - from).normalized()
 	
-	var end_point = from + direction * FIXED_GRAPPLE_DISTANCE
+	var end_point = from + direction * GRAPPLE_DISTANCE
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.new()
 	query.from = from
@@ -154,20 +124,18 @@ func update_cursor_predictor():
 	immediate_mesh.surface_add_vertex(from - global_transform.origin)
 	immediate_mesh.surface_add_vertex(end_point - global_transform.origin)
 	immediate_mesh.surface_end()
-	cursor_predictor.visible = true  # Ensure it's visible
+	cursor_predictor.visible = true
 
-	
 func update_raycast_positions():
-	var character_height = 2.0  # Adjust this based on your character's height
+	var character_height = 2.0
 	var character_center = global_transform.origin + Vector3(0, character_height / 2, 0)
 	
 	for i in range(RAYCAST_COUNT):
 		var angle = PI - (i / (RAYCAST_COUNT - 1.0)) * RAYCAST_ARC_ANGLE
 		var direction = Vector2(cos(angle), sin(angle))
 		raycasts[i].global_transform.origin = character_center
-		raycasts[i].target_position = Vector3(direction.x, direction.y, 0) * FIXED_GRAPPLE_DISTANCE
+		raycasts[i].target_position = Vector3(direction.x, direction.y, 0) * GRAPPLE_DISTANCE
 		raycasts[i].force_raycast_update()
-
 
 func handle_movement(delta):
 	var move_dir = Input.get_axis(\"move_left\", \"move_right\")
@@ -202,7 +170,7 @@ func handle_movement(delta):
 
 func handle_ball_movement(delta):
 	var move_dir = Input.get_axis(\"move_left\", \"move_right\")
-	velocity.x = move_dir * MOVE_SPEED * SPHERE_SPEED_BOOST
+	velocity.x = move_dir * MOVE_SPEED * 1.5
 	
 	apply_gravity(delta)
 	
@@ -250,7 +218,7 @@ func exit_ball_state():
 	ball_mesh.visible = false
 
 func handle_grapple(delta):
-	if Input.is_action_just_pressed(\"grapple\") and not is_instance_valid(projectile):
+	if Input.is_action_just_pressed(\"grapple\") and not hooked:
 		shoot_grapple()
 	
 	if hooked:
@@ -258,55 +226,89 @@ func handle_grapple(delta):
 		if Input.is_action_just_released(\"grapple\"):
 			detach_grapple()
 
-
 func shoot_grapple():
-	print(\"Inside Shoot Grapple\")
 	var mouse_pos = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
-	var from = global_position + Vector3(0, 2, 0)  # Offset to start from character's center
-	var to = camera.project_position(mouse_pos, FIXED_GRAPPLE_DISTANCE)
+	var from = global_transform.origin + Vector3(0, 1, 0)
+	var to = camera.project_position(mouse_pos, GRAPPLE_DISTANCE)
 	var direction = (to - from).normalized()
-	direction.z = 0 # Keep restriction on z-axis
 	
-	# End point of the ray determining launch direction for grapple hook
-	var end_point = from + direction * FIXED_GRAPPLE_DISTANCE
-	# Used to get access to the 3D world to query for current and potential collisions
-	var space_state = get_world_3d().direct_space_state 
-	# Used in conjunction with space_state to detect collisions
+	var end_point = from + direction * GRAPPLE_DISTANCE
+	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.new()
 	query.from = Vector3(from.x, from.y, 0.5)  # Set z-axis to 0.5
 	query.to = Vector3(end_point.x, end_point.y, 0.5)  # Set z-axis to 0.5
-	print(query.from)
-	print(query.to)
-	# Collision data
+	
 	var result = space_state.intersect_ray(query)
 	
-	print(result)
-	
-	# If we have collision data, the player can launch the grapple hook
-	if not result.is_empty():
-		var grapple_point = result.position
-		print(\"Grapple Point: \", grapple_point)
-		
-		if is_instance_valid(projectile):
-			projectile.queue_free()
-			print(\"Free queue in projectile\")
-		projectile = Projectile.new()
-		projectile.global_position = from
-		projectile.linear_velocity = (grapple_point - from).normalized() * projectile.speed
-		projectile.gravity_scale = 0
-		projectile.connect(\"collided\", Callable(self, \"_on_projectile_collided\"))
-		get_tree().current_scene.add_child(projectile)
-
-		# Set the hook position immediately
-		hook_pos = grapple_point
-		grapple_direction = (grapple_point - from).normalized()
+	if result:
+		print(\"is hooked\")
+		hook_pos = result.position
 		hooked = true
+		velocity = Vector3.ZERO
+
+const GRAPPLE_STIFFNESS = 100.0  # How strongly the grapple pulls
+const GRAPPLE_DAMPING = 5.0      # Reduces oscillation
+const PLAYER_MOVE_FORCE = 500.0  # Force applied by player input
+
+func grapple_movement(delta):
+	var to_hook = hook_pos - global_transform.origin
+	var distance_to_hook = to_hook.length()
+	var hook_direction = to_hook.normalized()
+
+	# Player input
+	var move_input = Vector2(Input.get_axis(\"move_left\", \"move_right\"), Input.get_axis(\"move_down\", \"move_up\"))
+
+	# Spring force (pulls player towards grapple point)
+	var spring_force = hook_direction * (distance_to_hook - MAX_GRAPPLE_LENGTH) * GRAPPLE_STIFFNESS
+
+	# Damping force (reduces oscillation)
+	var damping_force = -velocity * GRAPPLE_DAMPING
+
+	# Player-controlled force
+	var tangent = Vector3(-hook_direction.y, hook_direction.x, 0).normalized()
+	var player_force = (tangent * move_input.x + hook_direction * move_input.y) * PLAYER_MOVE_FORCE
+
+	# Gravity
+	var gravity_force = Vector3.DOWN * GRAVITY
+
+	# Total force
+	var total_force = spring_force + damping_force + player_force + gravity_force
+
+	# Update velocity (F = ma, assume mass = 1)
+	velocity += total_force * delta
+
+	# Move the character
+	global_transform.origin += velocity * delta
+
+	# Keep z-coordinate at 0
+	global_transform.origin.z = 0
+
+	print(\"Position: \", global_transform.origin)
+	print(\"Velocity: \", velocity)
+	print(\"Distance to hook: \", distance_to_hook)
+
+func update_grapple_line():
+	var immediate_mesh = grapple_line.mesh as ImmediateMesh
+	immediate_mesh.clear_surfaces()
+	if hooked:
+		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		immediate_mesh.surface_add_vertex(Vector3.ZERO)
+		immediate_mesh.surface_add_vertex(hook_pos - global_transform.origin)
+		immediate_mesh.surface_end()
+		grapple_line.visible = true
 	else:
-		print(\"Can't grapple in that direction!\")
+		grapple_line.visible = false
 
-
-
+func detach_grapple():
+	hooked = false
+	
+	# Calculate the launch velocity based on the current velocity
+	var launch_velocity = velocity * 1.5  # Adjust the multiplier as needed
+	
+	# Apply the launch velocity to the character
+	velocity = launch_velocity
+	
 func find_closest_raycast(direction):
 	var closest_raycast = null
 	var smallest_angle = INF
@@ -317,68 +319,6 @@ func find_closest_raycast(direction):
 			smallest_angle = angle
 			closest_raycast = raycast
 	return closest_raycast
-
-func grapple_movement(delta):
-	var hook_direction = (hook_pos - global_transform.origin).normalized()
-	
-	var distance_to_hook = global_transform.origin.distance_to(hook_pos)
-
-	if distance_to_hook > FIXED_GRAPPLE_DISTANCE:
-		global_transform.origin = hook_pos - hook_direction * FIXED_GRAPPLE_DISTANCE
-		velocity = Vector3.ZERO
-	else:
-		var local_swing_direction = Vector3(Input.get_axis(\"move_left\", \"move_right\"), 0, 0)
-		var target_swing_velocity = local_swing_direction * SWING_FORCE
-		swing_velocity = swing_velocity.lerp(target_swing_velocity, SWING_ACCELERATION * delta)
-
-		var additional_force = Vector3.ZERO
-		if Input.is_action_pressed(\"move_left\"):
-			additional_force -= hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE * delta
-		if Input.is_action_pressed(\"move_right\"):
-			additional_force += hook_direction.rotated(Vector3.UP, PI / 2) * SWING_FORCE * delta
-
-		var upward_velocity = Vector3.ZERO
-		if Input.is_action_pressed(\"move_up\") or global_transform.origin.y < hook_pos.y:
-			upward_velocity = Vector3.UP * GRAPPLE_SPEED
-
-		var pendulum_force = hook_direction * (distance_to_hook / FIXED_GRAPPLE_DISTANCE) * SWING_FORCE
-
-		velocity = swing_velocity + additional_force + upward_velocity + pendulum_force
-
-		swing_velocity *= 1 - SWING_DAMPING * delta
-
-		var target_velocity = velocity
-		velocity = velocity.lerp(target_velocity, 0.8)
-
-		velocity.y -= SWING_FALL_SPEED * delta
-		global_transform.origin += velocity * delta
-		global_transform.origin.z = 0  # Ensure z-axis remains at 0
-
-func _on_projectile_collided(collision):
-	if is_instance_valid(projectile):
-		projectile.queue_free()
-		projectile = null # Reset the projectile variable to null
-	
-	# Update hook position to collision point
-	hook_pos = collision.get_position()
-	
-	print(\"Projectile Reached Target\")
-	
-	hooked = true # Set hooked to true when the grapple attaches
-
-func detach_grapple():
-	hooked = false
-	swing_velocity = Vector3.ZERO
-	if is_instance_valid(projectile):
-		projectile.queue_free()
-		projectile = null # Reset the projectile variable to null
-	
-	print(\"Grapple Detached\")
-	
-	# Enter ball state when detaching from grapple
-	dash_direction = Vector2(velocity.x, velocity.y).normalized()
-	enter_ball_state()
-
 
  
 
