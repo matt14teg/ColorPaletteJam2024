@@ -17,8 +17,9 @@ albedo_texture = ExtResource("2_jkhhx")
 [node name="wigglewormanimated" instance=ExtResource("1_tb0b2")]
 
 [node name="Skeleton3D" parent="Armature" index="0"]
-bones/1/rotation = Quaternion(0.166066, -0.0105022, -0.0622349, 0.984093)
-bones/2/rotation = Quaternion(-0.157772, -0.0105965, -0.0597148, 0.985611)
+bones/0/rotation = Quaternion(0, 0, -0.0612083, 0.998125)
+bones/1/rotation = Quaternion(0.165058, 0.0210776, 0.124904, 0.978116)
+bones/2/rotation = Quaternion(-0.157157, 0.0186796, 0.105266, 0.98177)
 
 [node name="Glasses" parent="Armature/Skeleton3D" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_unc4c")

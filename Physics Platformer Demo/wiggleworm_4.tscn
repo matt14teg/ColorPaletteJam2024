@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://j7cq1suofcwx"]
+[gd_scene load_steps=7 format=3 uid="uid://j7cq1suofcwx"]
 
 [ext_resource type="PackedScene" uid="uid://circtfvhxdiax" path="res://models/wiggleworm4.glb" id="1_8ce1o"]
+[ext_resource type="Script" path="res://wiggleworm_4.gd" id="2_bvnmd"]
 [ext_resource type="Texture2D" uid="uid://bsfbiuuhxsrc3" path="res://models/COLOR_CUBE.png" id="2_e6wmd"]
 [ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_y8vt3"]
 
@@ -15,6 +16,7 @@ next_pass = SubResource("ShaderMaterial_jcls1")
 albedo_texture = ExtResource("2_e6wmd")
 
 [node name="wiggleworm4" instance=ExtResource("1_8ce1o")]
+script = ExtResource("2_bvnmd")
 
 [node name="Body" parent="WiggleWorm" index="0"]
 surface_material_override/0 = SubResource("StandardMaterial3D_sjord")

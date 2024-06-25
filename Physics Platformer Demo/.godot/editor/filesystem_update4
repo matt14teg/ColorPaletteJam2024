@@ -1,5 +1,15 @@
+res://stage.tscn
 res://Node3D.gd
 res://tileset.tres
 res://TestTile.tres
-
 res://models/outlineshader.tres
+res://scenes/test_scene.tscn
+res://test_player.tscn
+res://projectile.tscn
+res://enemy_test.tscn
+res://models/diver.tscn
+res://models/guppy.tscn
+res://stall_2.tscn
+res://wiggleworm_4.tscn
+res://shark.tscn
+res://wigglewormanimated.tscn
