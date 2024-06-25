@@ -1,0 +1,20 @@
+[gd_scene load_steps=6 format=3 uid="uid://duul2pv33y1f5"]
+
+[ext_resource type="PackedScene" uid="uid://sn4vgfw216vq" path="res://models/stall2.glb" id="1_c0qj1"]
+[ext_resource type="Texture2D" uid="uid://cod6t205jplaq" path="res://models/SHOP_TEXT_COLORS.png" id="2_femyk"]
+[ext_resource type="Shader" uid="uid://ckwp363ojy4nk" path="res://models/outlineshader.tres" id="3_ty7al"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_235ti"]
+render_priority = 0
+shader = ExtResource("3_ty7al")
+shader_parameter/Outline_Size = 2.0
+shader_parameter/ColorParameter = Color(0.160784, 0.12549, 0.258824, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mddt4"]
+next_pass = SubResource("ShaderMaterial_235ti")
+albedo_texture = ExtResource("2_femyk")
+
+[node name="stall2" instance=ExtResource("1_c0qj1")]
+
+[node name="Stall" parent="." index="0"]
+surface_material_override/0 = SubResource("StandardMaterial3D_mddt4")
